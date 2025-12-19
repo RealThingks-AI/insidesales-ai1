@@ -257,7 +257,7 @@ export const KanbanBoard = ({
         <div className="flex flex-col lg:flex-row gap-2 items-start lg:items-center justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1 min-w-0">
             <div className="relative flex-1 min-w-[180px] max-w-sm">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground w-3 h-3" />
+              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-3 h-3 pointer-events-none" />
               <Input
                 placeholder="Search all deal details..."
                 value={searchTerm}

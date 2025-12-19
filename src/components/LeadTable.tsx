@@ -362,9 +362,9 @@ const LeadTable = ({
       {/* Header and Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input placeholder="Search leads..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 w-80" />
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+            <Input placeholder="Search leads..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 w-full" />
           </div>
           <LeadStatusFilter value={statusFilter} onValueChange={setStatusFilter} />
         </div>
