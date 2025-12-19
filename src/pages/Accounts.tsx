@@ -8,9 +8,10 @@ import { useAccountsImportExport } from "@/hooks/useAccountsImportExport";
 import { AccountDeleteConfirmDialog } from "@/components/AccountDeleteConfirmDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AccountAnalyticsDashboard } from "@/components/accounts/AccountAnalyticsDashboard";
-
 const Accounts = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [viewMode, setViewMode] = useState<'table' | 'analytics'>('table');
   const [showColumnCustomizer, setShowColumnCustomizer] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -51,26 +52,16 @@ const Accounts = () => {
         <div className="px-6 h-16 flex items-center border-b w-full">
           <div className="flex items-center justify-between w-full">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-bold text-foreground">Accounts</h1>
+              <h1 className="text-2xl text-foreground font-semibold">Accounts</h1>
             </div>
             <div className="flex items-center gap-3">
               {/* View Toggle */}
               <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
-                <Button
-                  variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('table')}
-                  className="gap-1.5 h-8 px-2.5 text-xs"
-                >
+                <Button variant={viewMode === 'table' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('table')} className="gap-1.5 h-8 px-2.5 text-xs">
                   <List className="h-3.5 w-3.5" />
                   List
                 </Button>
-                <Button
-                  variant={viewMode === 'analytics' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('analytics')}
-                  className="gap-1.5 h-8 px-2.5 text-xs"
-                >
+                <Button variant={viewMode === 'analytics' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('analytics')} className="gap-1.5 h-8 px-2.5 text-xs">
                   <BarChart3 className="h-3.5 w-3.5" />
                   Analytics
                 </Button>
@@ -130,15 +121,11 @@ const Accounts = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 min-h-0 overflow-auto p-6">
-        {viewMode === 'analytics' ? (
-          <AccountAnalyticsDashboard />
-        ) : (
-          <AccountTable showColumnCustomizer={showColumnCustomizer} setShowColumnCustomizer={setShowColumnCustomizer} showModal={showModal} setShowModal={setShowModal} selectedAccounts={selectedAccounts} setSelectedAccounts={setSelectedAccounts} key={refreshTrigger} onBulkDeleteComplete={() => {
-            setSelectedAccounts([]);
-            setRefreshTrigger(prev => prev + 1);
-            setShowBulkDeleteDialog(false);
-          }} />
-        )}
+        {viewMode === 'analytics' ? <AccountAnalyticsDashboard /> : <AccountTable showColumnCustomizer={showColumnCustomizer} setShowColumnCustomizer={setShowColumnCustomizer} showModal={showModal} setShowModal={setShowModal} selectedAccounts={selectedAccounts} setSelectedAccounts={setSelectedAccounts} key={refreshTrigger} onBulkDeleteComplete={() => {
+        setSelectedAccounts([]);
+        setRefreshTrigger(prev => prev + 1);
+        setShowBulkDeleteDialog(false);
+      }} />}
       </div>
 
       {/* Bulk Delete Confirmation Dialog */}
