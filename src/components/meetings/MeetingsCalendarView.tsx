@@ -119,11 +119,11 @@ export const MeetingsCalendarView = ({ meetings, onMeetingClick, onMeetingUpdate
   };
 
   const getMeetingColor = (meeting: Meeting) => {
-    if (meeting.status === 'cancelled') return 'bg-destructive/20 border-destructive/40 text-destructive-foreground';
+    if (meeting.status === 'cancelled') return 'bg-destructive/30 border-destructive text-destructive dark:bg-destructive/40 dark:text-destructive-foreground';
     const now = new Date();
     const meetingStart = new Date(meeting.start_time);
-    if (meetingStart < now) return 'bg-muted border-muted-foreground/20 text-muted-foreground';
-    return 'bg-primary/20 border-primary/40 text-primary-foreground';
+    if (meetingStart < now) return 'bg-muted border-muted-foreground/30 text-foreground dark:text-foreground';
+    return 'bg-primary border-primary text-primary-foreground';
   };
 
   const workHours = Array.from({ length: WORK_END_HOUR - WORK_START_HOUR }, (_, i) => i + WORK_START_HOUR);
@@ -460,12 +460,12 @@ const MonthView = ({
                           onMeetingClick(meeting);
                         }}
                         className={cn(
-                          "text-xs px-1.5 py-0.5 rounded truncate cursor-grab active:cursor-grabbing border transition-all hover:shadow-sm",
+                          "text-xs px-1.5 py-0.5 rounded truncate cursor-grab active:cursor-grabbing border transition-all hover:shadow-sm font-medium",
                           getMeetingColor(meeting),
                           draggedMeeting?.id === meeting.id && "opacity-50"
                         )}
                       >
-                        <span className="font-medium">{format(new Date(meeting.start_time), 'HH:mm')}</span>
+                        <span className="font-semibold">{format(new Date(meeting.start_time), 'HH:mm')}</span>
                         {' '}{meeting.subject}
                       </div>
                     ))}
@@ -604,7 +604,7 @@ const DayWeekView = ({
                     onDragEnd={onDragEnd}
                     onClick={() => onMeetingClick(meeting)}
                     className={cn(
-                      "absolute left-1 right-1 rounded-md border px-2 py-1 cursor-grab active:cursor-grabbing transition-all hover:shadow-md overflow-hidden group",
+                      "absolute left-1 right-1 rounded-md border-2 px-2 py-1 cursor-grab active:cursor-grabbing transition-all hover:shadow-lg overflow-hidden group",
                       getMeetingColor(meeting),
                       draggedMeeting?.id === meeting.id && "opacity-50"
                     )}
@@ -620,16 +620,16 @@ const DayWeekView = ({
                         <Video className="h-3 w-3 mt-0.5 flex-shrink-0" />
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs font-medium truncate">
+                        <div className="text-xs font-semibold truncate">
                           {meeting.subject}
                         </div>
                         {height > 40 && (
-                          <div className="text-xs opacity-70 truncate">
+                          <div className="text-xs opacity-80 truncate font-medium">
                             {format(new Date(meeting.start_time), 'HH:mm')} - {format(new Date(meeting.end_time), 'HH:mm')}
                           </div>
                         )}
                         {height > 60 && (meeting.lead_name || meeting.contact_name) && (
-                          <div className="text-xs opacity-70 truncate mt-1">
+                          <div className="text-xs opacity-80 truncate mt-1">
                             {meeting.lead_name || meeting.contact_name}
                           </div>
                         )}

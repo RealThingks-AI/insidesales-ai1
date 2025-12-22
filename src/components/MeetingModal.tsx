@@ -12,8 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Video, Loader2, CalendarIcon, Clock, XCircle } from "lucide-react";
+import { Video, Loader2, CalendarIcon, Clock, XCircle, X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { MeetingOutcomeSelect } from "@/components/meetings/MeetingOutcomeSelect";
 import { MeetingConflictWarning } from "@/components/meetings/MeetingConflictWarning";
 // Comprehensive timezones (40 options, ordered by GMT offset)
@@ -140,6 +141,13 @@ export const MeetingModal = ({ open, onOpenChange, meeting, onSuccess }: Meeting
   const [startTime, setStartTime] = useState("09:00");
   const [duration, setDuration] = useState("60"); // Duration in minutes
   
+  // Toggle for Lead vs Contact selection
+  const [linkType, setLinkType] = useState<'lead' | 'contact'>('lead');
+  
+  // Multiple email addresses for attendees
+  const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
+  const [emailInput, setEmailInput] = useState("");
+  
   // Store the UTC reference time for timezone conversions
   const [utcReferenceTime, setUtcReferenceTime] = useState<Date | null>(null);
   
@@ -252,6 +260,21 @@ export const MeetingModal = ({ open, onOpenChange, meeting, onSuccess }: Meeting
           outcome: meeting.outcome || "",
           notes: meeting.notes || ""
         });
+        // Set link type based on existing meeting
+        if (meeting.lead_id) {
+          setLinkType('lead');
+        } else if (meeting.contact_id) {
+          setLinkType('contact');
+        }
+        // Parse existing attendees for additional emails
+        if (meeting.attendees && Array.isArray(meeting.attendees)) {
+          const existingEmails = (meeting.attendees as { email: string }[])
+            .map(a => a.email)
+            .filter(Boolean);
+          setAdditionalEmails(existingEmails);
+        } else {
+          setAdditionalEmails([]);
+        }
       } else {
         // Set default start time to next hour rounded to 15 min
         const defaultStart = new Date();
@@ -263,6 +286,9 @@ export const MeetingModal = ({ open, onOpenChange, meeting, onSuccess }: Meeting
         setStartDate(defaultStart);
         setStartTime(format(defaultStart, "HH:mm"));
         setDuration("60");
+        setLinkType('lead');
+        setAdditionalEmails([]);
+        setEmailInput("");
         
         setFormData({
           subject: "",
@@ -325,19 +351,25 @@ export const MeetingModal = ({ open, onOpenChange, meeting, onSuccess }: Meeting
     try {
       const attendees: { email: string; name: string }[] = [];
       
-      if (formData.lead_id) {
+      // Add lead or contact based on link type
+      if (linkType === 'lead' && formData.lead_id) {
         const lead = leads.find(l => l.id === formData.lead_id);
         if (lead?.email) {
           attendees.push({ email: lead.email, name: lead.lead_name });
         }
-      }
-      
-      if (formData.contact_id) {
+      } else if (linkType === 'contact' && formData.contact_id) {
         const contact = contacts.find(c => c.id === formData.contact_id);
         if (contact?.email) {
           attendees.push({ email: contact.email, name: contact.contact_name });
         }
       }
+      
+      // Add additional email attendees
+      additionalEmails.forEach(email => {
+        if (email && !attendees.some(a => a.email === email)) {
+          attendees.push({ email, name: email.split('@')[0] });
+        }
+      });
 
       const { data, error } = await supabase.functions.invoke('create-teams-meeting', {
         body: {
@@ -394,8 +426,9 @@ export const MeetingModal = ({ open, onOpenChange, meeting, onSuccess }: Meeting
         start_time: buildISODateTime(startDate, startTime),
         end_time: buildEndISODateTime(startDate, startTime, parseInt(duration)),
         join_url: joinUrlOverride || formData.join_url || null,
-        lead_id: formData.lead_id && formData.lead_id.trim() !== "" ? formData.lead_id : null,
-        contact_id: formData.contact_id && formData.contact_id.trim() !== "" ? formData.contact_id : null,
+        lead_id: linkType === 'lead' && formData.lead_id && formData.lead_id.trim() !== "" ? formData.lead_id : null,
+        contact_id: linkType === 'contact' && formData.contact_id && formData.contact_id.trim() !== "" ? formData.contact_id : null,
+        attendees: additionalEmails.length > 0 ? additionalEmails.map(email => ({ email, name: email.split('@')[0] })) : null,
         status: formData.status,
         outcome: formData.outcome || null,
         notes: formData.notes || null,
@@ -614,9 +647,39 @@ export const MeetingModal = ({ open, onOpenChange, meeting, onSuccess }: Meeting
                 />
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="lead_id">Link to Lead</Label>
+              {/* Link Type Toggle */}
+              <div className="space-y-3">
+                <Label>Link to</Label>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+                    <Button
+                      type="button"
+                      variant={linkType === 'lead' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => {
+                        setLinkType('lead');
+                        setFormData(prev => ({ ...prev, contact_id: '' }));
+                      }}
+                      className="h-8 px-3 text-xs"
+                    >
+                      Lead
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={linkType === 'contact' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => {
+                        setLinkType('contact');
+                        setFormData(prev => ({ ...prev, lead_id: '' }));
+                      }}
+                      className="h-8 px-3 text-xs"
+                    >
+                      Contact
+                    </Button>
+                  </div>
+                </div>
+                
+                {linkType === 'lead' ? (
                   <Select
                     value={formData.lead_id}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, lead_id: value === "none" ? "" : value }))}
@@ -636,10 +699,7 @@ export const MeetingModal = ({ open, onOpenChange, meeting, onSuccess }: Meeting
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="contact_id">Link to Contact</Label>
+                ) : (
                   <Select
                     value={formData.contact_id}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value === "none" ? "" : value }))}
@@ -659,7 +719,61 @@ export const MeetingModal = ({ open, onOpenChange, meeting, onSuccess }: Meeting
                       ))}
                     </SelectContent>
                   </Select>
+                )}
+              </div>
+
+              {/* Additional Attendees (Multiple Emails) */}
+              <div className="space-y-2">
+                <Label>Additional Attendees</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="Enter email address"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const email = emailInput.trim();
+                        if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !additionalEmails.includes(email)) {
+                          setAdditionalEmails(prev => [...prev, email]);
+                          setEmailInput("");
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const email = emailInput.trim();
+                      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !additionalEmails.includes(email)) {
+                        setAdditionalEmails(prev => [...prev, email]);
+                        setEmailInput("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
+                {additionalEmails.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {additionalEmails.map((email, index) => (
+                      <Badge key={index} variant="secondary" className="gap-1 pr-1">
+                        {email}
+                        <button
+                          type="button"
+                          onClick={() => setAdditionalEmails(prev => prev.filter((_, i) => i !== index))}
+                          className="ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">Press Enter or click + to add email addresses</p>
               </div>
 
               <div className="space-y-2">
