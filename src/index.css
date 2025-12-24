@@ -172,6 +172,23 @@ All colors MUST be HSL.
   }
 }
 
+/* Improved placeholder visibility (#24) */
+::placeholder {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.7;
+}
+
+/* Required field indicator (#40) */
+.form-required::after {
+  content: " *";
+  color: hsl(var(--destructive));
+}
+
+/* Button scale animation */
+.button-scale {
+  @apply transition-all duration-150 active:scale-95;
+}
+
 @layer base {
   * {
     @apply border-border;

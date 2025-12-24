@@ -456,16 +456,19 @@ const UserDashboard = () => {
       case "recentActivities":
         return (
           <Card className="h-full animate-fade-in">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-primary" />
                 Recent Activities
               </CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/settings?tab=audit')}>
+                View All
+              </Button>
             </CardHeader>
             <CardContent>
               {recentActivities && recentActivities.length > 0 ? (
-                <div className="space-y-3">
-                  {recentActivities.map((activity) => (
+                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                  {recentActivities.slice(0, 5).map((activity) => (
                     <div key={activity.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <Activity className="w-4 h-4 text-primary" />
@@ -473,14 +476,18 @@ const UserDashboard = () => {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{activity.subject}</p>
                         <p className="text-xs text-muted-foreground">
-                          {activity.activity_type} • {format(new Date(activity.activity_date), 'dd/MM/yyyy')}
+                          {activity.activity_type} • {format(new Date(activity.activity_date), 'dd/MM/yyyy HH:mm')}
                         </p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No recent activities</p>
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Activity className="w-10 h-10 text-muted-foreground/50 mb-2" />
+                  <p className="text-sm text-muted-foreground">No recent activities</p>
+                  <p className="text-xs text-muted-foreground mt-1">Activities will appear here as you work</p>
+                </div>
               )}
             </CardContent>
           </Card>
