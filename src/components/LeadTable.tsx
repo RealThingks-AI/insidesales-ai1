@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, CalendarPlus, CheckSquare } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, CalendarPlus, CheckSquare, FileText, Plus } from "lucide-react";
 import { RowActionsDropdown, Edit, Trash2, Mail, RefreshCw } from "./RowActionsDropdown";
 import { LeadModal } from "./LeadModal";
 import { LeadColumnCustomizer, LeadColumnConfig } from "./LeadColumnCustomizer";
@@ -401,11 +401,28 @@ const LeadTable = ({
             <TableBody>
               {loading ? <TableRow>
                   <TableCell colSpan={visibleColumns.length + 2} className="text-center py-8">
-                    Loading leads...
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                      <span className="text-muted-foreground">Loading leads...</span>
+                    </div>
                   </TableCell>
                 </TableRow> : pageLeads.length === 0 ? <TableRow>
-                  <TableCell colSpan={visibleColumns.length + 2} className="text-center py-8">
-                    No leads found
+                  <TableCell colSpan={visibleColumns.length + 2} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-3">
+                      <FileText className="w-10 h-10 text-muted-foreground/50" />
+                      <div>
+                        <p className="font-medium text-foreground">No leads found</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {searchTerm ? "Try adjusting your search criteria" : "Get started by adding your first lead"}
+                        </p>
+                      </div>
+                      {!searchTerm && (
+                        <Button size="sm" onClick={() => setShowModal(true)} className="mt-2">
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add First Lead
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow> : pageLeads.map(lead => <TableRow key={lead.id} className="hover:bg-muted/20 border-b" data-state={selectedLeads.includes(lead.id) ? "selected" : undefined}>
                     <TableCell className="text-center px-4 py-3">
