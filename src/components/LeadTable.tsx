@@ -505,18 +505,18 @@ const LeadTable = ({
         </div>
       </Card>
 
-      {totalPages > 1 && <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredLeads.length)} of {filteredLeads.length} leads
-            </span>
-          </div>
+      {/* Always show pagination info */}
+      <div className="flex items-center justify-between py-2">
+        <span className="text-sm font-medium text-foreground">
+          Showing {filteredLeads.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-{Math.min(currentPage * itemsPerPage, filteredLeads.length)} of {filteredLeads.length} leads
+        </span>
+        {totalPages > 1 && (
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
               <ChevronLeft className="w-4 h-4" />
               Previous
             </Button>
-            <span className="text-sm">
+            <span className="text-sm bg-muted px-3 py-1 rounded-md font-medium">
               Page {currentPage} of {totalPages}
             </span>
             <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>
@@ -524,7 +524,8 @@ const LeadTable = ({
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
-        </div>}
+        )}
+      </div>
 
       <LeadModal open={showModal} onOpenChange={setShowModal} lead={editingLead} onSuccess={() => {
       fetchLeads();
