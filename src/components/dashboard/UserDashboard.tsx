@@ -148,21 +148,28 @@ const UserDashboard = () => {
     enabled: !!user?.id
   });
 
-  // Fetch user's deals count and value
+  // Fetch user's deals count and value - check both created_by and lead_owner
   const { data: dealsData, isLoading: dealsLoading } = useQuery({
     queryKey: ['user-deals-count', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('deals').select('id, stage, total_contract_value').eq('created_by', user?.id);
+      // Fetch deals where user is either creator or lead owner
+      const { data, error } = await supabase.from('deals').select('id, stage, total_contract_value, lead_owner, created_by');
       if (error) throw error;
-      const totalValue = data?.reduce((sum, d) => sum + (d.total_contract_value || 0), 0) || 0;
-      const wonDeals = data?.filter(d => d.stage === 'Won') || [];
+      
+      // Filter deals that belong to current user (either as creator or lead owner)
+      const userDeals = (data || []).filter(d => 
+        d.created_by === user?.id || d.lead_owner === user?.id
+      );
+      
+      const totalValue = userDeals.reduce((sum, d) => sum + (d.total_contract_value || 0), 0);
+      const wonDeals = userDeals.filter(d => d.stage === 'Won');
       const wonValue = wonDeals.reduce((sum, d) => sum + (d.total_contract_value || 0), 0);
       return {
-        total: data?.length || 0,
+        total: userDeals.length,
         won: wonDeals.length,
         totalValue,
         wonValue,
-        active: data?.filter(d => !['Won', 'Lost', 'Dropped'].includes(d.stage)).length || 0
+        active: userDeals.filter(d => !['Won', 'Lost', 'Dropped'].includes(d.stage)).length
       };
     },
     enabled: !!user?.id
@@ -223,13 +230,16 @@ const UserDashboard = () => {
     enabled: !!user?.id
   });
 
-  // Fetch recent activities from security audit log
+  // Fetch recent activities from security audit log - filter by current user
   const { data: recentActivities } = useQuery({
     queryKey: ['user-recent-activities', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('security_audit_log')
-        .select('id, action, resource_type, resource_id, created_at, details')
+        .select('id, action, resource_type, resource_id, created_at, details, user_id')
+        .eq('user_id', user?.id)
+        .in('action', ['CREATE', 'UPDATE', 'DELETE'])
+        .in('resource_type', ['contacts', 'leads', 'deals', 'accounts', 'meetings', 'tasks'])
         .order('created_at', { ascending: false })
         .limit(5);
       if (error) throw error;
@@ -425,10 +435,10 @@ const UserDashboard = () => {
                               OVERDUE
                             </span>
                           )}
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            task.priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                            task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                            'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            task.priority === 'high' ? 'bg-red-500 text-white' :
+                            task.priority === 'medium' ? 'bg-amber-500 text-white' :
+                            'bg-slate-500 text-white'
                           }`}>
                             {task.priority}
                           </span>

@@ -407,7 +407,7 @@ const LeadTable = ({
                   <TableCell colSpan={visibleColumns.length + 2} className="text-center py-8">
                     No leads found
                   </TableCell>
-                </TableRow> : pageLeads.map(lead => <TableRow key={lead.id} className="hover:bg-muted/20 border-b">
+                </TableRow> : pageLeads.map(lead => <TableRow key={lead.id} className="hover:bg-muted/20 border-b" data-state={selectedLeads.includes(lead.id) ? "selected" : undefined}>
                     <TableCell className="text-center px-4 py-3">
                       <div className="flex justify-center">
                         <Checkbox checked={selectedLeads.includes(lead.id)} onCheckedChange={checked => handleSelectLead(lead.id, checked as boolean)} />
