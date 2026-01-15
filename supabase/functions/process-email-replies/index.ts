@@ -373,6 +373,40 @@ serve(async (req: Request) => {
             console.error(`Failed to update email history:`, updateError);
             continue;
           }
+
+          // Update last_contacted_at on the linked entity with the reply's received_at timestamp
+          // This ensures incoming replies update the "Last Contacted" field
+          const { data: emailRecord } = await supabase
+            .from('email_history')
+            .select('contact_id, lead_id, account_id')
+            .eq('id', originalEmail.id)
+            .single();
+
+          if (emailRecord) {
+            const replyReceivedAt = reply.received_at;
+            
+            if (emailRecord.contact_id) {
+              await supabase
+                .from('contacts')
+                .update({ last_contacted_at: replyReceivedAt })
+                .eq('id', emailRecord.contact_id)
+                .lt('last_contacted_at', replyReceivedAt);
+            }
+            if (emailRecord.lead_id) {
+              await supabase
+                .from('leads')
+                .update({ last_contacted_at: replyReceivedAt })
+                .eq('id', emailRecord.lead_id)
+                .lt('last_contacted_at', replyReceivedAt);
+            }
+            if (emailRecord.account_id) {
+              await supabase
+                .from('accounts')
+                .update({ last_contacted_at: replyReceivedAt })
+                .eq('id', emailRecord.account_id)
+                .lt('last_contacted_at', replyReceivedAt);
+            }
+          }
           
           // Create notification for the sender
           if (originalEmail.sent_by) {
